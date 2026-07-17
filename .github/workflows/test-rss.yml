@@ -31,7 +31,6 @@ jobs:
           name: rss-feed
           path: rss.xml
 
-      # 如果以后要部署到 Pages，取消下面三行注释（注意保留前面的 # 号）
        - name: 部署到 Pages
          uses: peaceiris/actions-gh-pages@v3
          with:
