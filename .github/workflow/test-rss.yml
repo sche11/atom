@@ -1,0 +1,40 @@
+name: Test RSS Generator
+
+on:
+  workflow_dispatch:   # 允许手动触发测试
+  # 也可以改成定时运行，比如每天 UTC 0 点
+  # schedule:
+  #   - cron: '0 0 * * *'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install requests
+
+      - name: 运行 RSS 生成脚本
+        run: python generate_rss.py
+
+      - name: 上传生成的 RSS 文件 (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-feed
+          path: rss.xml
+
+      # 可选：直接部署到 GitHub Pages，方便在线订阅
+      # - name: 部署到 Pages
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./
+      #     keep_files: false
