@@ -1,29 +1,27 @@
-name: Test RSS Generator
+steps:
+  - name: Checkout 代码
+    uses: actions/checkout@v4
 
-on:
-  workflow_dispatch:
+  - name: 设置 Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.11'
 
-jobs:
-  generate:
-    runs-on: ubuntu-latest
+  - name: 安装依赖
+    run: pip install requests
 
-    steps:
-      - name: Checkout 代码
-        uses: actions/checkout@v4
+  - name: 运行 RSS 生成脚本
+    run: python generate_rss.py
 
-      - name: 设置 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+  - name: 上传生成的 RSS 文件 (artifact)
+    uses: actions/upload-artifact@v4
+    with:
+      name: rss-feed
+      path: rss.xml
 
-      - name: 安装依赖
-        run: pip install requests
-
-      - name: 运行 RSS 生成脚本
-        run: python generate_rss.py
-
-      - name: 上传生成的 RSS 文件
-        uses: actions/upload-artifact@v4
-        with:
-          name: rss-feed
-          path: rss.xml
+  - name: 部署到 Pages
+    uses: peaceiris/actions-gh-pages@v3
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      publish_dir: ./
+      keep_files: false
