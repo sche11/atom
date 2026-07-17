@@ -1,10 +1,7 @@
 name: Test RSS Generator
 
 on:
-  workflow_dispatch:   # 允许手动触发测试
-  # 也可以改成定时运行，比如每天 UTC 0 点
-  # schedule:
-  #   - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   generate:
@@ -25,15 +22,8 @@ jobs:
       - name: 运行 RSS 生成脚本
         run: python generate_rss.py
 
-      - name: 上传生成的 RSS 文件 (artifact)
+      - name: 上传生成的 RSS 文件
         uses: actions/upload-artifact@v4
         with:
           name: rss-feed
           path: rss.xml
-
-       - name: 部署到 Pages
-         uses: peaceiris/actions-gh-pages@v3
-         with:
-           github_token: ${{ secrets.GITHUB_TOKEN }}
-           publish_dir: ./
-           keep_files: false
