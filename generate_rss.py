@@ -5,8 +5,8 @@ RSS 生成器：监控 AI API 公益站导航页面的更新
 
 解析逻辑:
 - div.stat 中 <span>更新日期</span> 对应的 <b> 标签获取全局更新日期
-- 每个站点条目: h2=站名, p.domain=域名, p.note=描述
-- 描述中的【MMDD新增/更新】标签用于提取条目更新日期
+- 每个站点条目: h2=站名, p.domain=域名, p.note=描述, p.added-date=添加日期
+- 优先使用 added-date 作为条目时间，其次使用描述中的【MMDD新增/更新】标签
 - 按日期排序后生成 RSS feed
 """
 
@@ -21,7 +21,6 @@ from html.parser import HTMLParser
 try:
     import requests
 except ImportError:
-    # fallback to urllib
     import urllib.request
     import urllib.error
 
@@ -49,22 +48,17 @@ RSS_TITLE = "AI API 公益站导航 - 更新监控"
 RSS_LINK = SOURCE_URL
 RSS_DESC = "监控 AI API 公益站导航页面的最新更新，包括新增站点和站点信息变更"
 RSS_FILE = "rss.xml"
-# 每次运行最多输出多少条最新条目
 MAX_ITEMS = 30
-# 如果 note 中没有日期标签，默认回溯到多少天前
 DEFAULT_DAYS_AGO = 60
 
 
 # ─── HTML 解析器 ─────────────────────────────────────────
 class NavPageParser(HTMLParser):
-    """解析导航页，提取更新日期和站点条目"""
-
     def __init__(self):
         super().__init__()
-        self.update_date = None  # 全局更新日期 (YYYY-MM-DD)
-        self.entries = []  # [{name, domain, note, date}]
+        self.update_date = None
+        self.entries = []
 
-        # 解析状态
         self._in_stat = False
         self._in_stat_b = False
         self._in_stat_span = False
@@ -74,10 +68,13 @@ class NavPageParser(HTMLParser):
         self._in_h2 = False
         self._in_domain = False
         self._in_note = False
+        self._in_added_date = False
+        self._skip_data = False          # 跳过 <span> 内的文本
 
         self._current_name = ""
         self._current_domain = ""
         self._current_note = ""
+        self._current_added_date = ""
 
     def handle_starttag(self, tag, attrs):
         attrs_dict = dict(attrs)
@@ -99,6 +96,13 @@ class NavPageParser(HTMLParser):
         elif tag == "p" and attrs_dict.get("class") == "note":
             self._in_note = True
             self._current_note = ""
+        elif tag == "p" and attrs_dict.get("class") == "added-date":
+            self._in_added_date = True
+            self._current_added_date = ""
+
+        # 进入 added-date 内部的 span 时，标记跳过文本
+        if self._in_added_date and tag == "span":
+            self._skip_data = True
 
     def handle_endtag(self, tag):
         if tag == "b" and self._in_stat_b:
@@ -115,14 +119,29 @@ class NavPageParser(HTMLParser):
             self._in_domain = False
         elif tag == "p" and self._in_note:
             self._in_note = False
-            # 收集一个完整条目
-            self.entries.append({
-                "name": self._current_name.strip(),
-                "domain": self._current_domain.strip(),
-                "note": self._current_note.strip(),
-            })
+        elif tag == "p" and self._in_added_date:
+            self._in_added_date = False
+            # added-date 结束，认为一条完整条目已解析完毕
+            if self._current_name:
+                self.entries.append({
+                    "name": self._current_name.strip(),
+                    "domain": self._current_domain.strip(),
+                    "note": self._current_note.strip(),
+                    "added_date": self._current_added_date.strip(),
+                })
+                # 重置
+                self._current_name = ""
+                self._current_domain = ""
+                self._current_note = ""
+                self._current_added_date = ""
+
+        # 结束 span 时取消跳过标记
+        if tag == "span" and self._skip_data:
+            self._skip_data = False
 
     def handle_data(self, data):
+        if self._skip_data:
+            return
         if self._in_stat_b:
             self._stat_b_text += data
         elif self._in_stat_span:
@@ -133,15 +152,12 @@ class NavPageParser(HTMLParser):
             self._current_domain += data
         elif self._in_note:
             self._current_note += data
+        elif self._in_added_date:
+            self._current_added_date += data
 
 
 # ─── 日期提取 ───────────────────────────────────────────
 def extract_date_from_note(note: str, year_hint: int = None) -> datetime:
-    """
-    从 note 中提取日期标签，格式如:
-      【0531新增】 【0527更新】 【0706新增】 【0527】
-    返回对应的 datetime；找不到则返回 None
-    """
     m = re.search(r"【(\d{4})(?:新增|更新|修改)?】", note)
     if m:
         mmdd = m.group(1)
@@ -149,7 +165,6 @@ def extract_date_from_note(note: str, year_hint: int = None) -> datetime:
         year = year_hint or datetime.now().year
         try:
             dt = datetime(year, mm, dd)
-            # 如果日期在未来，说明是去年的
             if dt > datetime.now() + timedelta(days=1):
                 dt = datetime(year - 1, mm, dd)
             return dt
@@ -159,8 +174,7 @@ def extract_date_from_note(note: str, year_hint: int = None) -> datetime:
 
 
 def assign_dates(entries, update_date_str):
-    """为每条 entry 计算排序用的 datetime"""
-    # 从全局更新日期推断年份
+    """优先使用 added_date，其次 note 内标签，最后回退"""
     year_hint = None
     if update_date_str:
         try:
@@ -171,18 +185,42 @@ def assign_dates(entries, update_date_str):
         year_hint = datetime.now().year
 
     for entry in entries:
-        dt = extract_date_from_note(entry["note"], year_hint)
-        if dt is None:
-            # 没有日期标签的条目，回退到默认天数前
-            dt = datetime.now() - timedelta(days=DEFAULT_DAYS_AGO)
-        entry["date"] = dt
-
+        # 1) added_date 优先
+        added = entry.get("added_date", "").strip()
+        if added:
+            try:
+                dt = datetime.strptime(added, "%Y-%m-%d")
+                entry["date"] = dt
+                continue
+            except ValueError:
+                pass
+        # 2) note 日期标签
+        dt = extract_date_from_note(entry.get("note", ""), year_hint)
+        if dt:
+            entry["date"] = dt
+            continue
+        # 3) 回退
+        entry["date"] = datetime.now() - timedelta(days=DEFAULT_DAYS_AGO)
     return entries
 
 
 # ─── RSS 生成 ───────────────────────────────────────────
+def build_item_link(domain):
+    """
+    根据域名生成可访问的链接：
+    - 如果已包含协议头则直接返回
+    - 否则补全 https://
+    - 如果域名为空则返回导航页链接
+    """
+    domain = domain.strip()
+    if not domain:
+        return SOURCE_URL
+    if domain.startswith("http"):
+        return domain
+    return f"https://{domain}"
+
+
 def generate_rss(entries, update_date_str):
-    """生成 RSS 2.0 XML"""
     rss = Element("rss", version="2.0", **{"xmlns:atom": "http://www.w3.org/2005/Atom"})
     channel = SubElement(rss, "channel")
 
@@ -192,13 +230,11 @@ def generate_rss(entries, update_date_str):
     SubElement(channel, "language").text = "zh-CN"
     SubElement(channel, "generator").text = "ai-api-nav-rss-generator"
 
-    # atom:link self
     atom_link = SubElement(channel, "atom:link")
     atom_link.set("href", RSS_LINK)
     atom_link.set("rel", "self")
     atom_link.set("type", "application/rss+xml")
 
-    # pubDate / lastBuildDate
     now_str = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
     SubElement(channel, "lastBuildDate").text = now_str
     if update_date_str:
@@ -210,16 +246,12 @@ def generate_rss(entries, update_date_str):
     else:
         SubElement(channel, "pubDate").text = now_str
 
-    # 按日期降序排列
-    sorted_entries = sorted(entries, key=lambda e: e["date"], reverse=True)
-    sorted_entries = sorted_entries[:MAX_ITEMS]
+    sorted_entries = sorted(entries, key=lambda e: e["date"], reverse=True)[:MAX_ITEMS]
 
     for entry in sorted_entries:
         item = SubElement(channel, "item")
 
-        # 标题: 站名 + 日期标签
         date_label = entry["date"].strftime("%m月%d日")
-        # 判断是新增还是更新
         if "新增" in entry["note"]:
             action = "新增"
         elif "更新" in entry["note"]:
@@ -228,12 +260,8 @@ def generate_rss(entries, update_date_str):
             action = "更新"
         SubElement(item, "title").text = f"[{action}] {entry['name']} - {date_label}"
 
-        # 链接: 补全 https://
-        domain = entry["domain"]
-        if not domain.startswith("http"):
-            link = f"https://{domain}"
-        else:
-            link = domain
+        # 链接
+        link = build_item_link(entry["domain"])
         SubElement(item, "link").text = link
 
         # 描述
@@ -248,16 +276,14 @@ def generate_rss(entries, update_date_str):
         pub = entry["date"].strftime("%a, %d %b %Y 00:00:00 GMT")
         SubElement(item, "pubDate").text = pub
 
-        # guid (基于域名哈希，保证稳定)
+        # guid
         guid_val = hashlib.md5(entry["domain"].encode()).hexdigest()
         guid_el = SubElement(item, "guid")
         guid_el.set("isPermaLink", "false")
         guid_el.text = f"ai-api-nav-{guid_val}"
 
-    # 美化输出
     raw = tostring(rss, encoding="unicode", xml_declaration=False)
     pretty = parseString(raw).toprettyxml(indent="  ", encoding=None)
-    # 去掉 minidom 自动加的 xml 声明，手动加一个带 encoding 的
     lines = pretty.split("\n")
     if lines and lines[0].startswith("<?xml"):
         lines = lines[1:]
@@ -275,32 +301,27 @@ def main():
     html = resp.text
     print(f"[*] 页面大小: {len(html)} bytes")
 
-    # 解析
     parser = NavPageParser()
     parser.feed(html)
     print(f"[*] 全局更新日期: {parser.update_date}")
     print(f"[*] 解析到 {len(parser.entries)} 个站点条目")
 
-    # 分配日期
     entries = assign_dates(parser.entries, parser.update_date)
 
-    # 统计
     dated = sum(1 for e in entries if e["date"] > datetime.now() - timedelta(days=DEFAULT_DAYS_AGO))
     print(f"[*] 其中有日期标签的: {dated} 条")
 
-    # 生成 RSS
     rss_xml = generate_rss(entries, parser.update_date)
 
-    # 写入文件
     with open(RSS_FILE, "w", encoding="utf-8") as f:
         f.write(rss_xml)
     print(f"[*] RSS 已写入: {RSS_FILE}")
 
-    # 打印最新 5 条预览
     sorted_entries = sorted(entries, key=lambda e: e["date"], reverse=True)
     print("\n── 最新 5 条 ──")
     for e in sorted_entries[:5]:
         print(f"  {e['date'].strftime('%Y-%m-%d')} | {e['name']:12s} | {e['domain']}")
+        print(f"  {'':14s}| 链接: {build_item_link(e['domain'])}")
         print(f"  {'':14s}| {e['note'][:60]}")
 
 
