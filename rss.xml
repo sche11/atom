@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+  <channel>
+    <title>AI API 公益站导航 - 更新监控</title>
+    <link>https://bubblevv.github.io/ai-api-gongyi-nav/</link>
+    <description>监控 AI API 公益站导航页面的最新更新，包括新增站点和站点信息变更</description>
+    <language>zh-CN</language>
+    <generator>ai-api-nav-rss-generator</generator>
+    <atom:link href="https://bubblevv.github.io/ai-api-gongyi-nav/" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>Fri, 17 Jul 2026 14:32:07 GMT</lastBuildDate>
+    <pubDate>Thu, 16 Jul 2026 00:00:00 GMT</pubDate>
+    <item>
+      <title>[新增] ai工具箱 - 07月16日</title>
+      <link>https://api.aiaiai001.com</link>
+      <description>&lt;b&gt;ai工具箱&lt;/b&gt;&lt;br/&gt;域名: api.aiaiai001.com&lt;br/&gt;【0706新增】注册4美元，邀请奖励2美元；0.3倍率，可签到</description>
+      <pubDate>Thu, 16 Jul 2026 00:00:00 GMT</pubDate>
+      <guid isPermaLink="false">ai-api-nav-a2ca81eea1cd8037ab08ca73b3f91b04</guid>
+    </item>
+    <item>
+      <title>[更新] VC - 07月16日</title>
+      <link>https://sub.vcnovb.cn</link>
+      <description>&lt;b&gt;VC&lt;/b&gt;&lt;br/&gt;域名: sub.vcnovb.cn&lt;br/&gt;实测：邮箱注册 倍率：GPT-Plus-特价 0.1x 邀请：邀请注册双方各得5刀余额 须知：可用5.6sol</description>
+      <pubDate>Thu, 16 Jul 2026 00:00:00 GMT</pubDate>
+      <guid isPermaLink="false">ai-api-nav-1d30406a4049a9d55a43a2b1c91bfe80</guid>
+    </item>
+    <item>
+      <title>[新增] JianZhiLe - 07月06日</title>
+      <link>https://jianzhile.vip</link>
+      <description>&lt;b&gt;JianZhiLe&lt;/b&gt;&lt;br/&gt;域名: jianzhile.vip&lt;br/&gt;【0701新增】注册送15刀；邀请送30刀，需要被邀请用户首次调用 API 解锁余额；充值 1:15，约等于0.067倍率</description>
+      <pubDate>Mon, 06 Jul 2026 00:00:00 GMT</pubDate>
+      <guid isPermaLink="false">ai-api-nav-ef902897d86b278e415be77dd275545f</guid>
+    </item>
+    <item>
+      <title>[新增] 0d0d - 07月06日</title>
+      <link>https://ai.0d0d.top</link>
+      <description>&lt;b&gt;0d0d&lt;/b&gt;&lt;br/&gt;域名: ai.0d0d.top&lt;br/&gt;【0706新增】注册20刀，签到20刀；邀请人奖励10刀；0.5x倍率 GPT</description>
+      <pubDate>Mon, 06 Jul 2026 00:00:00 GMT</pubDate>
+      <guid isPermaLink="false">ai-api-nav-53f7129205f347cf2bcb5e2ca4d690df</guid>
+    </item>
+    <item>
+      <title>[新增] TokensHub - 07月06日</title>
+      <link>https://api.tokenshub.site</link>
+      <description>&lt;b&gt;TokensHub&lt;/b&gt;&lt;br/&gt;域名: api.tokenshub.site&lt;br/&gt;【0706新增】邀请码注册送20刀；输入兑换码 L4EAVCEP4R42XW7W 再得28刀；仅有 DeepSeek v4、Kimi 2.6、MiniMax 2.7 等国模</description>
+      <pubDate>Mon, 06 Jul 2026 00:00:00 GMT</pubDate>
+      <guid isPermaLink="false">ai-api-nav-5d4305a634fb969b27833c6ebee0fec5</guid>
+    </item>
+    <item>
+      <title>[新增] DawClaudeCode - 07月06日</title>
+      <link>https://dawclaudecode.com</link>
+      <description>&lt;b&gt;DawClaudeCode&lt;/b&gt;&lt;br/&gt;域名: dawclaudecode.com&lt;br/&gt;【0706新增】新用户注册可领3天 Pro 体验卡，含2元体验额度，按0.1倍率计费；有0.01倍率的 K12</description>
+      <pubDate>Mon, 06 Jul 2026 00:00:00 GMT</pubDate>
+      <guid isPermaLink="false">ai-api-nav-f00a0bd71874c0d7b928b4fe833004db</guid>
+    </item>
+    <item>
+      <title>[更新] J3GB - 07月01日</title>
+      <link>https://vip.j3gb.com</link>
+      <description>&lt;b&gt;J3GB&lt;/b&gt;&lt;br/&gt;域名: vip.j3gb.com&lt;br/&gt;登录送4刀，但是倍率是0.001；限时随机开放，正常plus倍率0.1，约等于4000刀/40刀</description>
+      <pubDate>Wed, 01 Jul 2026 00:00:00 GMT</pubDate>
+      <guid isPermaLink="false">ai-api-nav-13b95ad66ef6332813e8ba355e79dcb3</guid>
+    </item>
+  </channel>
+</rss>
