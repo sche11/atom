@@ -1,14 +1,14 @@
   #!/usr/bin/env python3
-  """
-  RSS 生成器：监控 AI API 公益站导航页面的更新
-  源地址: https://bubblevv.github.io/ai-api-gongyi-nav/
 
-  解析逻辑:
-  - div.stat 中 <span>更新日期</span> 对应的 <b> 标签获取全局更新日期
-  - 每个站点条目: h2=站名, p.domain=域名, p.note=描述
-  - 描述中的【MMDD新增/更新】标签用于提取条目更新日期
-  - 按日期排序后生成 RSS feed
-  """
+#  RSS 生成器：监控 AI API 公益站导航页面的更新
+#  源地址: https://bubblevv.github.io/ai-api-gongyi-nav/
+#
+#  解析逻辑:
+#  - div.stat 中 <span>更新日期</span> 对应的 <b> 标签获取全局更新日期
+#  - 每个站点条目: h2=站名, p.domain=域名, p.note=描述
+#  - 描述中的【MMDD新增/更新】标签用于提取条目更新日期
+#  - 按日期排序后生成 RSS feed
+
 
   import re
   import sys
