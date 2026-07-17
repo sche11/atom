@@ -1,13 +1,15 @@
-name: Test RSS Generator
+name: Generate All RSS Feeds
 
 on:
-  workflow_dispatch:   # 允许手动触发
+  workflow_dispatch:
   # schedule:
   #   - cron: '0 0 * * *'
 
 jobs:
   generate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write    # 允许推送 gh-pages 分支
 
     steps:
       - name: Checkout 代码
@@ -19,20 +21,30 @@ jobs:
           python-version: '3.11'
 
       - name: 安装依赖
-        run: pip install requests
+        run: |
+          pip install requests
+          # 如果将来其他脚本需要额外库，可在此添加
 
-      - name: 运行 RSS 生成脚本
-        run: python generate_rss.py
+      - name: 运行所有 RSS 生成脚本
+        run: |
+          echo "开始运行 scripts/ 下的所有脚本..."
+          for script in scripts/*.py; do
+            if [ -f "$script" ]; then
+              echo "========================================="
+              echo "运行: $script"
+              python "$script"
+              echo ""
+            fi
+          done
 
-      - name: 上传生成的 RSS 文件
-        uses: actions/upload-artifact@v4
-        with:
-          name: rss-feed
-          path: rss.xml
+      - name: 生成 feeds.json
+        run: python generate_feeds_json.py
 
-      - name: 部署到 Pages
+      - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./
           keep_files: false
+          # 只推送需要的文件，避免源代码泄露（可加 .gitignore，但 keep_files: false 会先清空）
+          exclude_assets: '.github,scripts,*.py,*.md,.gitignore'
