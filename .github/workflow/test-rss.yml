@@ -32,9 +32,10 @@ jobs:
           path: rss.xml
 
       # 可选：直接部署到 GitHub Pages，方便在线订阅
-      # - name: 部署到 Pages
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./
-      #     keep_files: false
+      # 如需启用，请取消下面几行的注释，并确保仓库已开启 Pages
+       - name: 部署到 Pages
+         uses: peaceiris/actions-gh-pages@v3
+         with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
+           publish_dir: ./
+           keep_files: false
